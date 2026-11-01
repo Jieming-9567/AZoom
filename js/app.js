@@ -791,13 +791,14 @@ const PIN_COLORS = { branch:'#0F2019', carpark:'#14523C', charger:'#9FCB12' };
 function initMap(){
   if (typeof L === 'undefined'){ $('map').innerHTML = '<p style="padding:20px">Map could not load. Check your connection.</p>'; return; }
   map = L.map('map',{scrollWheelZoom:false}).setView([1.3215,103.9],11);
-  // Free tiles, no API key needed. If CARTO tiles fail to load, switch to OpenStreetMap.
-  const carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{ attribution:'&copy; OpenStreetMap contributors &copy; CARTO', subdomains:'abcd', maxZoom:19 }).addTo(map);
+  // OpenStreetMap tiles: free, no API key needed.
+  // If they fail to load, switch to Esri street tiles (also no key).
+  const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap contributors', maxZoom:19, className:'map-tiles' }).addTo(map);
   let errors = 0;
-  carto.on('tileerror', () => {
+  osm.on('tileerror', () => {
     if (++errors !== 3) return;
-    map.removeLayer(carto);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap contributors', maxZoom:19 }).addTo(map);
+    map.removeLayer(osm);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{ attribution:'Tiles &copy; Esri', maxZoom:19, className:'map-tiles' }).addTo(map);
   });
   layer = L.layerGroup().addTo(map);
   renderMap('branch');

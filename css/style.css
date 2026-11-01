@@ -402,3 +402,6 @@ table.data tr:last-child td{border-bottom:none}
   .invoice{position:absolute;left:0;top:0;width:100%}
   .no-print{display:none!important}
 }
+
+/* Soften the map colours to match the site */
+.map-tiles{filter:grayscale(.75) brightness(1.04) contrast(.92)}
