@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZoom — Electric car rental in Singapore</title>
+<meta name="description" content="Rent an electric car by the day, week or month from AZoom's Raffles Place and Changi branches.">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="topbar">⚡ <b>Free cancellation</b> up to 24 hours before pick-up · Weekly rates save you a day · Monthly rates save ~25%</div>
+
+<!-- ================= HEADER ================= -->
+<header class="site">
+  <div class="wrap nav">
+    <div class="logo" onclick="go('home')" role="link" tabindex="0" aria-label="AZoom home">
+      <span class="logo-mark"><img src="img/logo.png" alt=""></span>AZoom
+    </div>
+    <nav class="nav-links" id="navLinks" aria-label="Main"></nav>
+    <div class="nav-right">
+      <button class="btn btn-ink btn-sm" id="signInBtn" onclick="openAuth('login')">Sign in</button>
+      <div class="acct hidden" id="acct">
+        <span class="nm" id="acctName"></span><span class="role" id="acctRole"></span>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">Log out</button>
+        <span class="avatar" id="acctAv"></span>
+      </div>
+      <button class="menu-btn" aria-label="Menu" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- ================= HOME (CUSTOMER SITE) ================= -->
+<div id="view-home">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow">Electric car rental · Singapore</span>
+          <h1>Go electric<br>by the <em>day,</em><br><em>week</em> or <em>month.</em></h1>
+          <p class="lead">Reserve online, collect at Raffles Place or Changi, and drop off at any designated AZoom car park. Every car leaves fully charged.</p>
+        </div>
+        <div class="hero-art">
+          <div class="disc"></div>
+          <img class="hero-photo" src="img/hero.jpg" alt="White electric SUV on an open road">
+          <div class="hero-badge" style="left:0;bottom:14%"><svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#0F2019"/><path d="M13 5 7 13h4l-1 6 6-8h-4l1-6z" fill="#C6F432"/></svg><div><b>480 km</b>avg. range</div></div>
+          <div class="hero-badge" style="right:2%;top:8%"><div><b>10</b>EVs in the fleet</div></div>
+        </div>
+      </div>
+
+      <!-- Booking widget -->
+      <div class="search" id="search" role="search">
+        <div class="search-tabs">
+          <button class="on" data-p="1" onclick="setPreset(1,this)">Daily</button>
+          <button data-p="7" onclick="setPreset(7,this)">Weekly</button>
+          <button data-p="30" onclick="setPreset(30,this)">Monthly</button>
+          <span class="note">Return to any of our 4 designated car parks</span>
+        </div>
+        <div class="search-row">
+          <div class="s-cell">
+            <span class="lbl">Pick-up branch</span>
+            <select id="sBranch" onchange="onSearchChange()"></select>
+          </div>
+          <div class="s-cell">
+            <span class="lbl">Pick-up</span>
+            <div class="dt"><input type="date" id="sPickDate" onchange="onSearchChange()"><select id="sPickTime" onchange="onSearchChange()"></select></div>
+          </div>
+          <div class="s-cell">
+            <span class="lbl">Return</span>
+            <div class="dt"><input type="date" id="sRetDate" onchange="onSearchChange(true)"><select id="sRetTime" onchange="onSearchChange(true)"></select></div>
+          </div>
+          <button class="btn btn-volt" onclick="applySearch()">Show cars →</button>
+        </div>
+        <div class="search-sum" id="searchSum"></div>
+      </div>
+
+      <div class="trust">
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14523C" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4z"/></svg><span><b>Basic cover included</b>Upgrade to zero excess at checkout</span></div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14523C" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg><span><b>Credit card only</b>9% GST shown upfront, no hidden fees</span></div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14523C" stroke-width="2"><path d="M13 3 5 14h6l-1 7 8-11h-6l1-7z"/></svg><span><b>100% charged</b>Every car leaves the branch full</span></div>
+        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#14523C" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span><b>Free cancellation</b>Up to 24h before pick-up</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLEET -->
+  <section class="block" id="fleet">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Choose your EV</h2>
+        <p>Prices update for the dates you picked. Weekly and monthly rates are applied automatically.</p>
+      </div>
+      <div class="fleet-layout">
+        <aside class="filters" aria-label="Filters">
+          <h4>Filters <button onclick="resetFilters()">Reset</button></h4>
+          <div class="fgroup">
+            <span class="lbl">Body type</span>
+            <div class="chips" id="typeChips"></div>
+          </div>
+          <div class="fgroup">
+            <span class="lbl">Seats</span>
+            <div class="chips" id="seatChips"></div>
+          </div>
+          <div class="fgroup">
+            <span class="lbl">Max price per day</span>
+            <input type="range" id="fPrice" min="80" max="320" step="10" value="320" oninput="renderFleet()">
+            <div class="range-val"><span>S$80</span><span id="fPriceVal">S$320</span></div>
+          </div>
+          <div class="fgroup">
+            <label class="check"><input type="checkbox" id="fAvail" onchange="renderFleet()"> Only show cars available for my dates</label>
+          </div>
+        </aside>
+        <div>
+          <div class="fleet-bar">
+            <span class="count" id="fleetCount"></span>
+            <select id="fSort" onchange="renderFleet()" aria-label="Sort">
+              <option value="rec">Sort: Recommended</option>
+              <option value="low">Price: low to high</option>
+              <option value="high">Price: high to low</option>
+              <option value="range">Longest range</option>
+            </select>
+          </div>
+          <div class="grid" id="fleetGrid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS (mirrors the five business events in the brief) -->
+  <section class="block" id="how" style="padding-top:20px">
+    <div class="wrap">
+      <div class="how">
+        <div class="sec-head"><h2>How renting works</h2><p>Five simple steps, from reservation to final bill.</p></div>
+        <div class="steps">
+          <div class="stepc"><h4>Reserve online</h4><p>Pick dates and a car, then pay the rental by credit card. A S$500 deposit is held on your card.</p></div>
+          <div class="stepc"><h4>Collect at the office</h4><p>Show your QR code and licence at Raffles Place or Changi. We hand over the keys.</p></div>
+          <div class="stepc"><h4>Return to a car park</h4><p>Park in any designated AZoom bay, plug in, and check out in the app.</p></div>
+          <div class="stepc"><h4>We inspect</h4><p>Our team checks the car within a few hours and records any damage with photos.</p></div>
+          <div class="stepc"><h4>Settle the final bill</h4><p>Pay any extra charges (or appeal them). Your deposit is then released.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section class="block" style="padding-top:20px">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Drivers like it here</h2>
+        <div class="score"><b>4.8</b><div><div class="stars">★★★★★</div><span class="hint">from 1,240 rentals</span></div></div>
+      </div>
+      <div class="reviews">
+        <article class="review"><div class="stars">★★★★★</div><p>Booked the Model 3 for a weekend. It was spotless and fully charged, and the counter took five minutes.</p><footer><span class="avatar" style="background:#4F46E5">ST</span><div>Sarah T.<small>Tesla Model 3 · 2 days</small></div></footer></article>
+        <article class="review"><div class="stars">★★★★★</div><p>The weekly rate was cheaper than I expected. Dropping the car at the NEX car park was easy.</p><footer><span class="avatar" style="background:#B45309">DL</span><div>David L.<small>BYD Atto 3 · 1 week</small></div></footer></article>
+        <article class="review"><div class="stars">★★★★☆</div><p>The inspection found a small scuff. I appealed through the bills page and got a reply the next day.</p><footer><span class="avatar" style="background:#0E7490">MC</span><div>Michael C.<small>Hyundai Ioniq 5 · 4 days</small></div></footer></article>
+        <article class="review"><div class="stars">★★★★★</div><p>Took the 7-seater BYD M6 for a month while our car was in the workshop. Great value.</p><footer><span class="avatar" style="background:#BE185D">JW</span><div>Jasmine W.<small>BYD M6 · 1 month</small></div></footer></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOCATIONS -->
+  <section class="block" id="locations" style="padding-top:20px">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Branches & car parks</h2>
+        <div class="seg" id="mapSeg">
+          <button class="on" onclick="renderMap('branch',this)">Branches</button>
+          <button onclick="renderMap('carpark',this)">Return car parks</button>
+          <button onclick="renderMap('charger',this)">Chargers</button>
+        </div>
+      </div>
+      <div class="map-layout">
+        <div id="map" aria-label="Map of AZoom locations"></div>
+        <div class="loc-list" id="locList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="block" id="faq" style="padding-top:20px">
+    <div class="wrap">
+      <div class="sec-head"><h2>Questions</h2></div>
+      <div class="faq">
+        <details><summary>What do I need to rent a car?</summary><p>You must be 23 or older, have held a full licence for at least 2 years, and pay with a credit card in your own name. Foreign licences not in English need an International Driving Permit or certified translation.</p></details>
+        <details><summary>How are daily, weekly and monthly rates worked out?</summary><p>We price each part of your rental at the best rate. 7 days costs the same as 6, and 30 days costs about 22 days. You always see the total before you pay.</p></details>
+        <details><summary>What is the deposit for?</summary><p>We hold S$500 on your card when you collect the car. It is released after inspection, once any final charges are settled.</p></details>
+        <details><summary>What if I return the car with a low battery?</summary><p>Below 20% we charge a S$50 recharging fee. Add the Pre-paid charging extra and you can return it at any level.</p></details>
+        <details><summary>What happens if there is damage?</summary><p>Staff record damage with photos at inspection. What you pay is capped by your protection: S$3,000 with Basic, S$1,000 with Standard, and nothing with Full. You can appeal any charge from your bills page.</p></details>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= MY BOOKINGS ================= -->
+<div id="view-bookings" class="hidden page"><div class="wrap">
+  <div class="page-head"><h1>My bookings</h1><p>Track each rental from reservation to final bill.</p></div>
+  <div class="stack" id="bookingsList"></div>
+</div></div>
+
+<!-- ================= RETURN ================= -->
+<div id="view-return" class="hidden page"><div class="wrap">
+  <div class="page-head"><h1>Return your car</h1><p>Check out at the car park. Our team inspects the car after you leave.</p></div>
+  <div class="two-col">
+    <div class="card" id="returnForm"></div>
+    <div class="note-box">
+      <h4 style="margin-bottom:6px">Before you submit</h4>
+      <ol>
+        <li>Park in a bay marked <b>AZoom</b> at a designated car park.</li>
+        <li>Plug the car into the bay charger.</li>
+        <li>Take 4 photos: front, rear, left and right.</li>
+        <li>Leave the key card in the glovebox and lock the car with the app.</li>
+      </ol>
+      <p class="hint" style="margin-top:10px">Below 20% battery a S$50 recharging fee applies, unless you bought Pre-paid charging.</p>
+    </div>
+  </div>
+</div></div>
+
+<!-- ================= BILLS ================= -->
+<div id="view-bills" class="hidden page"><div class="wrap">
+  <div class="page-head"><h1>Bills & invoices</h1><p>Your reservation payments and final bills after inspection.</p></div>
+  <div class="bills" id="billsList"></div>
+</div></div>
+
+<!-- ================= STAFF ================= -->
+<div id="view-staff" class="hidden page"><div class="wrap">
+  <div class="page-head"><h1>Staff console</h1><p id="staffDate"></p></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="tabs" id="staffTabs"></div>
+  <div id="staffBody"></div>
+</div></div>
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="logo" style="color:#fff;margin-bottom:12px"><span class="logo-mark"><img src="img/logo.png" alt=""></span>AZoom</div>
+        <p>Electric car rental for people who'd rather not own one.</p>
+      </div>
+      <div><h5>Rent</h5><ul><li><a onclick="go('home','fleet')">Our fleet</a></li><li><a onclick="go('home','how')">How it works</a></li><li><a onclick="go('home','faq')">FAQ</a></li></ul></div>
+      <div><h5>Branches</h5><ul><li>1 Raffles Place, #B1-12</li><li>80 Airport Blvd, Changi</li><li>Daily 8am – 9pm</li></ul></div>
+      <div><h5>Account</h5><ul><li><a onclick="go('bookings')">My bookings</a></li><li><a onclick="go('bills')">Bills</a></li><li><a onclick="openAuth('login',true)">Staff sign in</a></li></ul></div>
+    </div>
+    <div class="foot-note"><span>© 2026 AZoom Car Rental (fictional company). ISIT207 coursework demo — no real payments are processed.</span><span>Data is stored in your browser only.</span></div>
+  </div>
+</footer>
+
+<!-- ================= MODALS ================= -->
+<div class="overlay" id="m-auth" onclick="bgClose(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <button class="x" onclick="closeM('m-auth')" aria-label="Close">×</button>
+    <div class="modal-pad">
+      <h2 id="authTitle">Welcome to AZoom</h2>
+      <div class="auth-tabs"><button id="tabLogin" class="on" onclick="authTab('login')">Sign in</button><button id="tabReg" onclick="authTab('register')">Create account</button></div>
+      <form id="loginForm" onsubmit="login(event)" novalidate>
+        <div class="field"><label for="lEmail">Email</label><input class="input" type="email" id="lEmail" autocomplete="email" required></div>
+        <div class="field"><label for="lPass">Password</label><input class="input" type="password" id="lPass" autocomplete="current-password" required></div>
+        <p class="err-msg" id="lErr"></p>
+        <button class="btn btn-ink btn-block" type="submit">Sign in</button>
+      </form>
+      <form id="regForm" class="hidden" onsubmit="register(event)" novalidate>
+        <div class="field"><label for="rName">Full name (as on licence)</label><input class="input" id="rName" autocomplete="name" required></div>
+        <div class="field"><label for="rEmail">Email</label><input class="input" type="email" id="rEmail" autocomplete="email" required></div>
+        <div class="field"><label for="rPass">Password</label><input class="input" type="password" id="rPass" autocomplete="new-password" minlength="6" required><span class="hint">At least 6 characters</span></div>
+        <p class="err-msg" id="rErr"></p>
+        <button class="btn btn-volt btn-block" type="submit">Create account</button>
+      </form>
+      <div class="demo">
+        <b>Demo accounts</b><br>
+        Customer: demo@azoom.sg / demo123 <button type="button" onclick="fillDemo('c')">Use</button><br>
+        Staff: staff@azoom.sg / staff123 <button type="button" onclick="fillDemo('s')">Use</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-car" onclick="bgClose(event)">
+  <div class="modal wide" role="dialog" aria-modal="true"><button class="x" onclick="closeM('m-car')" aria-label="Close">×</button><div id="carDetail"></div></div>
+</div>
+
+<div class="overlay" id="m-book" onclick="bgClose(event)">
+  <div class="modal wide" role="dialog" aria-modal="true"><button class="x" onclick="closeM('m-book')" aria-label="Close">×</button>
+    <div class="bk-modal">
+      <div class="bk-main" id="bkMain"></div>
+      <aside class="bk-side" id="bkSide"></aside>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-bill" onclick="bgClose(event)">
+  <div class="modal inv" role="dialog" aria-modal="true"><button class="x no-print" onclick="closeM('m-bill')" aria-label="Close">×</button><div id="billDetail"></div></div>
+</div>
+
+<div class="overlay" id="m-dispute" onclick="bgClose(event)">
+  <div class="modal" role="dialog" aria-modal="true"><button class="x" onclick="closeM('m-dispute')" aria-label="Close">×</button>
+    <div class="modal-pad">
+      <h2>Appeal a charge</h2>
+      <p class="hint" style="margin:8px 0 18px">Tell us why you think the charge is wrong. We reply within 24 hours, and payment of the disputed amount is on hold until then.</p>
+      <input type="hidden" id="dId">
+      <div class="field"><label for="dReason">Reason</label><textarea class="input" id="dReason" rows="5" placeholder="e.g. The scratch on the rear bumper was already there at pick-up — see my photo from 10:02am."></textarea></div>
+      <p class="err-msg" id="dErr"></p>
+      <button class="btn btn-ink btn-block" onclick="submitDispute()">Submit appeal</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
